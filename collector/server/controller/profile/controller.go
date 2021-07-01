@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aliyun/aliyun-tablestore-go-sdk/v5/tablestore"
@@ -147,6 +148,15 @@ func ReceiveProfile(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+
+	logger().WithRequestId(c).Info(
+		"generate profile",
+		zap.String("service", req.Service),
+		zap.String("host", req.Host),
+		zap.String("service_version", req.ServiceVersion),
+		zap.String("profile_type", req.ProfileType),
+		zap.String("url", outerDownloadPath(oss.Bucket, oss.EndPoint, objectName)),
+	)
 }
 
 func UploadPath(pathPrefix, service, profileType, fileName string) string {
@@ -291,13 +301,21 @@ Loop:
 	}
 
 	var resp = mergeProfileDetail{
-		Url:          downloadPath(ossClient.Bucket, ossClient.EndPoint, objectName),
+		Url:          outerDownloadPath(ossClient.Bucket, ossClient.EndPoint, objectName),
 		ProfileCount: len(profileList),
 	}
 	c.AbortWithStatusJSON(http.StatusOK, resp)
 }
 
 func downloadPath(bucket, endPoint, objectName string) string {
+	return fmt.Sprintf("https://%s.%s/%s",
+		bucket,
+		endPoint,
+		objectName)
+}
+
+func outerDownloadPath(bucket, endPoint, objectName string) string {
+	endPoint = strings.ReplaceAll(endPoint, "-internal", "")
 	return fmt.Sprintf("https://%s.%s/%s",
 		bucket,
 		endPoint,
