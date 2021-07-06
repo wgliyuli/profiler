@@ -213,7 +213,7 @@ func MergeProfile(c *gin.Context) {
 
 	var reqs []*grab.Request
 	for _, profileModel := range profileModelList {
-		url := downloadPath(ossClient.Bucket, ossClient.EndPoint, profileModel.ObjectName)
+		url := internalDownloadPath(ossClient.Bucket, ossClient.EndPoint, profileModel.ObjectName)
 		req, err := grab.NewRequest("", url)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -307,7 +307,7 @@ Loop:
 	c.AbortWithStatusJSON(http.StatusOK, resp)
 }
 
-func downloadPath(bucket, endPoint, objectName string) string {
+func internalDownloadPath(bucket, endPoint, objectName string) string {
 	return fmt.Sprintf("https://%s.%s/%s",
 		bucket,
 		endPoint,
